@@ -1,0 +1,9 @@
+---
+source: src/main.rs
+assertion_line: 165
+expression: "String::from_utf8(buf).unwrap_or_default()"
+---
+lines_covered=12
+lines_missed=34
+lines_total=46
+coverage_percent=12.34

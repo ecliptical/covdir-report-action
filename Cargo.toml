@@ -1,0 +1,45 @@
+[package]
+name = "covdir-report-action"
+version = "0.1.0"
+authors = ["Peter Nehrer <pnehrer@eclipticalsoftware.com>"]
+repository = "https://github.com/ecliptical/covdir-report-action"
+description = """
+GitHub Action for generating simple code coverage reports from grcov-generated covdir files.
+"""
+categories = [
+    "development-tools",
+]
+keywords = ["github-action", "coverage", "ci-cd", "report", "grcov", "covdir"]
+license = "MIT"
+edition = "2021"
+rust-version = "1.65"
+
+[dependencies]
+anyhow = "1"
+config = { version = "0.13", default-features = false }
+gumdrop = "0.8"
+log = "0.4"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tracing = { version = "0.1", default-features = false, features = ["std"] }
+tracing-subscriber = { version = "0.3", default-features = false, features = ["env-filter", "fmt", "smallvec", "tracing-log"] }
+
+[dev-dependencies]
+assert_cmd = "2"
+assert_fs = "1"
+insta = { version = "1", features = ["yaml"] }
+predicates = "2"
+serde_yaml = "0.9"
+
+[features]
+default = ["log-level-info"]
+
+# Set only one of these
+log-level-info = ["log/release_max_level_info", "tracing/release_max_level_info"]
+log-level-debug = ["log/release_max_level_debug", "tracing/release_max_level_debug"]
+log-level-trace = ["log/release_max_level_trace", "tracing/release_max_level_trace"]
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = "debuginfo"

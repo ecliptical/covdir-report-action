@@ -1,0 +1,31 @@
+name: 'grcov covdir report'
+description: "Generate a report from grcov's covdir output"
+inputs:
+  file:
+    description: 'Path to covdir.json file'
+    required: true
+  summary:
+    description: 'Write report to step summary if `true`'
+    default: 'false'
+  out:
+    description: 'Write report to the given file'
+  title:
+    description: 'Report title'
+    default: 'Line coverage'
+outputs:
+  lines_covered:
+    description: 'Number of lines covered'
+  lines_missed:
+    description: 'Number of lines missed'
+  lines_total:
+    description: 'Total number of lines'
+  coverage_percent:
+    description: 'Percentage of lines covered'
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  args:
+    - "--file=${{ inputs.file }}"
+    - "--summary=${{ inputs.summary }}" 
+    - "--title=${{ inputs.title }}" 
+    - "--out=${{ inputs.out }}"
