@@ -29,3 +29,6 @@ runs:
     - "--summary=${{ inputs.summary }}" 
     - "--title=${{ inputs.title }}" 
     - "--out=${{ inputs.out }}"
+branding:
+  icon: award
+  color: blue
