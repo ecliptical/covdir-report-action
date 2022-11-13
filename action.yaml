@@ -1,5 +1,5 @@
-name: 'grcov covdir report'
-description: "Generate a report from grcov's covdir output"
+name: 'Grcov Covdir Report'
+description: "Generate a report from grcov-generated covdir output"
 inputs:
   file:
     description: 'Path to covdir.json file'
