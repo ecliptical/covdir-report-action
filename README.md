@@ -86,7 +86,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: build
-        env: &cargo-env
+        env:
           CARGO_INCREMENTAL: '0'
           RUSTC_BOOTSTRAP: '1'
           RUSTFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
@@ -96,7 +96,10 @@ jobs:
         with:
           command: test
         env:
-          <<: *cargo-env
+          CARGO_INCREMENTAL: '0'
+          RUSTC_BOOTSTRAP: '1'
+          RUSTFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
+          RUSTDOCFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
       - name: Install grcov
         uses: actions-rs/cargo@v1
         with:
