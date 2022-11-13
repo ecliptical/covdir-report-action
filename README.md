@@ -108,7 +108,7 @@ jobs:
       - name: Run grcov
         run: grcov . -s . --binary-path ./target/debug/ --excl-start '^mod\s+test(s)?\s*\{$' -t covdir --branch --ignore-not-existing --keep-only 'src/**' -o ./target/covdir.json
       - name: Generate coverage report
-        uses: ecliptical/covdir-report-action@main
+        uses: ecliptical/covdir-report-action@v0.1
         with:
           file: ./target/covdir.json
           summary: 'true'
@@ -119,5 +119,5 @@ jobs:
         with:
           hide_and_recreate: true
           hide_classify: "OUTDATED"
-          path: coverage.md
+          path: ./target/coverage.md
 ```

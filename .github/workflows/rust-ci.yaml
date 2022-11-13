@@ -54,4 +54,4 @@ jobs:
         with:
           hide_and_recreate: true
           hide_classify: "OUTDATED"
-          path: coverage.md
+          path: ./target/coverage.md
