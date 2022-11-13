@@ -6,21 +6,27 @@ A [GitHub Action](https://docs.github.com/en/actions) for generating simple code
 
 Structure your workflow to include the following steps:
 
-1. Checkout your code using the [checkout action](https://github.com/actions/checkout).
-1. Install your nightly [Rust toolchain](https://github.com/actions-rs/toolchain). 
-1. Build and test your code using the [cargo action](https://github.com/actions-rs/cargo) with some special compiler flags:
+1. Check out your code using the [checkout action](https://github.com/actions/checkout).
+1. Install your nightly [Rust toolchain](https://github.com/actions-rs/toolchain). If you prefer to use stable, or anything other than nightly, then you must add `RUSTC_BOOTSTRAP: '1'` in the env section of the cargo steps below.
+1. Build and test your code (in two separate steps) using the [cargo action](https://github.com/actions-rs/cargo) with some special compiler flags that are required for grcov to work:
     ```yaml
-        env:
-            CARGO_INCREMENTAL: '0'
-            RUSTFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
-            RUSTDOCFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
+    env:
+        CARGO_INCREMENTAL: '0'
+        RUSTFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
+        RUSTDOCFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
     ```
-1. Run the [grcov action](https://github.com/actions-rs/grcov#usage) with `covdir` as its output-type:
+1. Install grcov using cargo; e.g.,
     ```yaml
-    output-type: covdir
-    output-path: ./covdir.json
+      - uses: actions-rs/cargo@v1
+        with:
+          command: install
+          args: grcov
     ```
-1. Run this action, passing the previously generated covdir.json file as its input:
+1. Run grcov in the root of your workspace, specifying `covdir` as the output format and the path to the output file (e.g., ./target/covdir.json). Add any other arguments required for your particular project; e.g.,
+    ```yaml
+      - run: grcov . -s . --binary-path ./target/debug/ --excl-start '^mod\s+test(s)?\s*\{$' -t covdir --branch --ignore-not-existing --keep-only 'src/**' -o ./target/covdir.json
+    ```
+1. Finally, run this action, passing the path to the previously generated covdir.json file as the minimum input:
     ```yaml
         - uses: ecliptical/covdir-report-action@v1
         with:
@@ -54,4 +60,61 @@ By default, the action only produces output variables with values from the root 
 
 ## Example
 
-TBD
+An example workflow that builds and runs unit tests, collects test coverage, generates a simple markdown report, outputs it as the job sunmmary and posts it as a PR comment:
+
+```yaml
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+name: Rust Coverage
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the source code
+        uses: actions/checkout@v3
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: 1.65.0
+          override: true
+      - name: Build the binary
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+        env: &cargo-env
+          CARGO_INCREMENTAL: '0'
+          RUSTC_BOOTSTRAP: '1'
+          RUSTFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
+          RUSTDOCFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
+      - name: Run unit tests
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+        env:
+          <<: *cargo-env
+      - name: Install grcov
+        uses: actions-rs/cargo@v1
+        with:
+          command: install
+          args: grcov
+      - name: Run grcov
+        run: grcov . -s . --binary-path ./target/debug/ --excl-start '^mod\s+test(s)?\s*\{$' -t covdir --branch --ignore-not-existing --keep-only 'src/**' -o ./target/covdir.json
+      - name: Generate coverage report
+        uses: ecliptical/covdir-report-action@main
+        with:
+          file: ./target/covdir.json
+          summary: 'true'
+          out: ./target/coverage.md
+      - name: Add coverage comment to the pull request
+        uses: marocchino/sticky-pull-request-comment@v2
+        if: github.event_name == 'pull_request'
+        with:
+          hide_and_recreate: true
+          hide_classify: "OUTDATED"
+          path: coverage.md
+```
