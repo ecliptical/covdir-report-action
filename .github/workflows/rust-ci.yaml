@@ -26,7 +26,8 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           toolchain: 1.65.0
-          override: true
+          components: rustfmt, clippy
+          default: true
       - name: Check formatting
         uses: actions-rs/cargo@v1
         with:
@@ -57,7 +58,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           toolchain: 1.65.0
-          override: true
+          default: true
       - name: Build the binary
         uses: actions-rs/cargo@v1
         with:
