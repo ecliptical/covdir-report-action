@@ -23,7 +23,7 @@ outputs:
     description: 'Percentage of lines covered'
 runs:
   using: 'docker'
-  image: 'Dockerfile'
+  image: 'docker://ghcr.io/ecliptical/covdir-report-action:latest'
   args:
     - "--file=${{ inputs.file }}"
     - "--summary=${{ inputs.summary }}" 
