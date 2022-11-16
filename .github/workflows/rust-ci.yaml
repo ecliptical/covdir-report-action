@@ -8,7 +8,7 @@ name: Rust CI
 
 jobs:
   lint:
-    name: Lint checks
+    name: Check formatting and run clippy
     runs-on: ubuntu-latest
     steps:
       - name: Check out the source code
@@ -40,7 +40,7 @@ jobs:
           args: --all -- -D warnings
 
   coverage:
-    name: Tests with coverage
+    name: Run tests with coverage
     runs-on: ubuntu-latest
     steps:
       - name: Check out the source code
@@ -92,7 +92,7 @@ jobs:
           out: ./target/coverage.md
       - name: Add coverage comment to the pull request
         uses: marocchino/sticky-pull-request-comment@v2
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' 
         with:
           hide_and_recreate: true
           hide_classify: "OUTDATED"
