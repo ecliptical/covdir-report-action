@@ -24,7 +24,7 @@ Structure your workflow to include the following steps:
   ```
 1. Run grcov in the root of your workspace, specifying `covdir` as the output format and the path to the output file (e.g., ./target/covdir.json). Add any other arguments required for your particular project; e.g.,
   ```yaml
-    - run: grcov . -s . --binary-path ./target/debug/ --excl-start '^mod\s+test(s)?\s*\{$' -t covdir --branch --ignore-not-existing --keep-only 'src/**' -o ./target/covdir.json
+    - run: grcov . -s . --binary-path ./target/debug/ --excl-start '^mod\s+tests\s*\{$' -t covdir --branch --ignore-not-existing --keep-only 'src/**' -o ./target/covdir.json
   ```
 1. Finally, run this action, passing the path to the previously generated covdir.json file as the minimum input:
   ```yaml

@@ -131,7 +131,7 @@ fn main() -> anyhow::Result<()> {
 }
 
 #[cfg(test)]
-mod test {
+mod tests {
     use super::*;
     use insta::assert_snapshot;
 
