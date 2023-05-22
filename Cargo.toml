@@ -28,7 +28,7 @@ tracing-subscriber = { version = "0.3", default-features = false, features = ["e
 assert_cmd = "2"
 assert_fs = "1"
 insta = { version = "1", features = ["yaml"] }
-predicates = "2"
+predicates = "3"
 serde_yaml = "0.9"
 
 [features]
