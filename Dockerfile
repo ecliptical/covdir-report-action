@@ -1,4 +1,4 @@
-FROM rust:1.71-alpine AS builder
+FROM rust:1.72-alpine AS builder
 RUN apk add --no-cache musl-dev
 WORKDIR /usr/src/covdir-report-action
 COPY . .
