@@ -1,38 +1,29 @@
-use config::Config;
-use config::Environment;
-use gumdrop::Options;
+use anyhow::bail;
+use figment::{providers::Env as EnvSource, Figment};
+use log::*;
 use serde::Deserialize;
+use std::env;
 use std::fs::File;
 use std::io::{BufReader, BufWriter, Write};
 use std::path::PathBuf;
-use tracing::*;
-use tracing_subscriber::EnvFilter;
 
 mod node;
 
 use crate::node::Node;
 
-type ExplicitBool = bool;
-
-#[derive(Debug, Options)]
+#[derive(Debug, Default)]
 struct Cmd {
     /// Path to input file.
-    #[options(required)]
     file: PathBuf,
 
     /// Path to output file.
     out: PathBuf,
 
     /// Write job summary.
-    #[options(no_short)]
-    summary: ExplicitBool,
+    summary: bool,
 
     /// Report tile.
-    #[options(default = "Line coverage")]
     title: String,
-
-    /// Display help.
-    help: bool,
 }
 
 #[derive(Debug, Deserialize)]
@@ -88,28 +79,35 @@ fn fmt_number(n: usize) -> String {
 }
 
 fn main() -> anyhow::Result<()> {
-    tracing_subscriber::fmt()
-        .with_env_filter(EnvFilter::from_default_env())
-        .with_file(true)
-        .with_line_number(true)
-        .init();
+    env_logger::init();
 
-    let opt = Cmd::parse_args_default_or_exit();
+    let mut opt = Cmd::default();
+    for arg in env::args().skip(1) {
+        let Some((name, value)) = arg.split_once('=') else {
+            bail!("invalid argument: {arg}");
+        };
 
-    let config = Config::builder()
-        .add_source(Environment::with_prefix("GITHUB"))
-        .build()?;
+        match name {
+            "--file" => opt.file = value.into(),
+            "--summary" => opt.summary = value == "true",
+            "--title" => opt.title = value.to_string(),
+            "--out" => opt.out = value.into(),
+            _ => bail!("unknown argument: {name}"),
+        }
+    }
 
-    let env: Env = config.try_deserialize()?;
+    let env: Env = Figment::new()
+        .merge(EnvSource::prefixed("GITHUB_"))
+        .extract()?;
 
-    debug!(env = ?env, opt = ?opt);
+    debug!("env = {env:#?}, opt = {opt:#?}");
 
     let file = File::open(opt.file)?;
     let reader = BufReader::new(file);
 
     let root: Node = serde_json::from_reader(reader)?;
 
-    debug!(root = ?root);
+    debug!("root = {root:#?}");
 
     let out = File::create(env.output)?;
     write_output(out, &root)?;

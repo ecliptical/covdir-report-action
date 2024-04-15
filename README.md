@@ -7,26 +7,26 @@ A [GitHub Action](https://docs.github.com/en/actions) for generating simple code
 Structure your workflow to include the following steps:
 
 1. Check out your code using the [checkout action](https://github.com/actions/checkout).
-1. Install your nightly [Rust toolchain](https://github.com/actions-rs/toolchain). If you prefer to use stable, or anything other than nightly, then you must add `RUSTC_BOOTSTRAP: '1'` in the env section of the cargo steps below.
-1. Build and test your code (in two separate steps) using the [cargo action](https://github.com/actions-rs/cargo) with some special compiler flags that are required for grcov to work:
+2. Install your nightly [Rust toolchain](https://github.com/actions-rs/toolchain). If you prefer to use stable, or anything other than nightly, then you must add `RUSTC_BOOTSTRAP: '1'` in the env section of the cargo steps below.
+3. Build and test your code (in two separate steps) using the [cargo action](https://github.com/actions-rs/cargo) with some special compiler flags that are required for grcov to work:
   ```yaml
   env:
     CARGO_INCREMENTAL: '0'
     RUSTFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
     RUSTDOCFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
   ```
-1. Install grcov using cargo; e.g.,
+4. Install grcov using cargo; e.g.,
   ```yaml
     - uses: actions-rs/cargo@v1
       with:
         command: install
         args: grcov
   ```
-1. Run grcov in the root of your workspace, specifying `covdir` as the output format and the path to the output file (e.g., ./target/covdir.json). Add any other arguments required for your particular project; e.g.,
+5. Run grcov in the root of your workspace, specifying `covdir` as the output format and the path to the output file (e.g., ./target/covdir.json). Add any other arguments required for your particular project; e.g.,
   ```yaml
     - run: grcov . -s . --binary-path ./target/debug/ --excl-start '^mod\s+tests\s*\{$' -t covdir --branch --ignore-not-existing --keep-only 'src/**' -o ./target/covdir.json
   ```
-1. Finally, run this action, passing the path to the previously generated covdir.json file as the minimum input:
+6. Finally, run this action, passing the path to the previously generated covdir.json file as the minimum input:
   ```yaml
     - uses: ecliptical/covdir-report-action@v1
       with:

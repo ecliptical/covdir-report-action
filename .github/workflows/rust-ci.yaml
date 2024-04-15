@@ -25,7 +25,7 @@ jobs:
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: 1.74.0
+          toolchain: 1.77.0
           components: rustfmt, clippy
           default: true
       - name: Check formatting
@@ -57,8 +57,18 @@ jobs:
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: 1.74.0
+          toolchain: 1.77.0
           default: true
+      - name: Check formatting
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: '-- --check'
+      - name: Lint source
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: '-- -D warnings'
       - name: Build the binary
         uses: actions-rs/cargo@v1
         with:
@@ -81,7 +91,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: install
-          args: grcov
+          args: 'grcov --version 0.8.9'
       - name: Run grcov
         run: grcov . -s . --binary-path ./target/debug/ --excl-start '^mod\s+tests\s*\{$' -t covdir --branch --ignore-not-existing --keep-only 'src/**' -o ./target/covdir.json
       - name: Generate coverage report

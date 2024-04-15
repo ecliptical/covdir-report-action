@@ -42,8 +42,10 @@ fn full_options() {
     let assert = cmd
         .env("GITHUB_OUTPUT", output.path())
         .env("GITHUB_STEP_SUMMARY", summary.path())
-        .arg("-f")
-        .arg(input.path())
+        .arg(format!(
+            "--file={}",
+            input.path().to_str().unwrap_or_default()
+        ))
         .arg("--summary=true")
         .arg(format!("--out={}", results.path().to_string_lossy()))
         .assert();
@@ -69,6 +71,11 @@ fn missing_env() {
     let input = tmp_dir.child("covdir.json");
     let mut cmd = Command::cargo_bin(crate_name!()).expect("failed to create cmd");
 
-    let assert = cmd.arg("-f").arg(input.path()).assert();
+    let assert = cmd
+        .arg(format!(
+            "--file={}",
+            input.path().to_str().unwrap_or_default()
+        ))
+        .assert();
     assert.failure();
 }
