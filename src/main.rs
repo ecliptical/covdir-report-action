@@ -1,7 +1,5 @@
 use anyhow::bail;
-use figment::{providers::Env as EnvSource, Figment};
-use log::*;
-use serde::Deserialize;
+use gha::*;
 use std::env;
 use std::fs::File;
 use std::io::{BufReader, BufWriter, Write};
@@ -26,18 +24,12 @@ struct Cmd {
     title: String,
 }
 
-#[derive(Debug, Deserialize)]
-struct Env {
-    output: PathBuf,
-    step_summary: PathBuf,
-}
-
 fn write_output(file: impl Write, root: &Node) -> std::io::Result<()> {
     let mut out = BufWriter::new(file);
-    writeln!(&mut out, "lines_covered={}", root.lines_covered)?;
-    writeln!(&mut out, "lines_missed={}", root.lines_missed)?;
-    writeln!(&mut out, "lines_total={}", root.lines_total)?;
-    writeln!(&mut out, "coverage_percent={}", root.coverage_percent)?;
+    append_name_value(&mut out, "lines_covered", root.lines_covered)?;
+    append_name_value(&mut out, "lines_missed", root.lines_missed)?;
+    append_name_value(&mut out, "lines_total", root.lines_total)?;
+    append_name_value(&mut out, "coverage_percent", root.coverage_percent)?;
     Ok(())
 }
 
@@ -79,8 +71,6 @@ fn fmt_number(n: usize) -> String {
 }
 
 fn main() -> anyhow::Result<()> {
-    env_logger::init();
-
     let mut opt = Cmd::default();
     for arg in env::args().skip(1) {
         let Some((name, value)) = arg.split_once('=') else {
@@ -96,11 +86,7 @@ fn main() -> anyhow::Result<()> {
         }
     }
 
-    let env: Env = Figment::new()
-        .merge(EnvSource::prefixed("GITHUB_"))
-        .extract()?;
-
-    debug!("env = {env:#?}, opt = {opt:#?}");
+    debug!("opt = {opt:#?}");
 
     let file = File::open(opt.file)?;
     let reader = BufReader::new(file);
@@ -109,7 +95,7 @@ fn main() -> anyhow::Result<()> {
 
     debug!("root = {root:#?}");
 
-    let out = File::create(env.output)?;
+    let out = File::create(github_output())?;
     write_output(out, &root)?;
 
     if !opt.out.as_os_str().is_empty() {
@@ -121,7 +107,7 @@ fn main() -> anyhow::Result<()> {
         let file = File::options()
             .create(true)
             .append(true)
-            .open(env.step_summary)?;
+            .open(github_step_summary())?;
         write_summary(file, &root, &opt.title)?;
     }
 

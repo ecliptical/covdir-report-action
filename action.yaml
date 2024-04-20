@@ -1,5 +1,6 @@
 name: 'Grcov Covdir Report'
-description: "Generate a report from grcov-generated covdir output"
+description: 'Generate a report from grcov-generated covdir output'
+author: 'Peter Nehrer <pnehrer@eclipticalsoftware.com>'
 inputs:
   file:
     description: 'Path to covdir.json file'
