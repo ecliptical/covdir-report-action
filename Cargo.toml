@@ -1,6 +1,6 @@
 [package]
 name = "covdir-report-action"
-version = "0.2.1"
+version = "0.2.2"
 authors = ["Peter Nehrer <pnehrer@eclipticalsoftware.com>"]
 repository = "https://github.com/ecliptical/covdir-report-action"
 description = """
