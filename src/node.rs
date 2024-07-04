@@ -4,6 +4,7 @@ use std::marker::PhantomData;
 
 #[derive(Debug, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[allow(dead_code)]
 pub struct Node {
     pub name: String,
 
