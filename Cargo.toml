@@ -9,7 +9,7 @@ GitHub Action for generating simple code coverage reports from grcov-generated c
 categories = [
     "development-tools",
 ]
-keywords = ["github-action", "coverage", "ci-cd", "report", "grcov", "covdir"]
+keywords = ["github-action", "coverage", "ci-cd", "report", "grcov"]
 license = "MIT"
 edition = "2021"
 rust-version = "1.70"
