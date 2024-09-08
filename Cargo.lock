@@ -185,9 +185,9 @@ dependencies = [
 
 [[package]]
 name = "gha"
-version = "0.1.6"
+version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "287843485dddb37b192ad8423d122d4f97130df484a77ffec1350fa1ab6cab40"
+checksum = "82d6ed51b0f05a389e22a3af0cd5e99aea91b76ace4997696bc584fc7fac8717"
 
 [[package]]
 name = "globset"
