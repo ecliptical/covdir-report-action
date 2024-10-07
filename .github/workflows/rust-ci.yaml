@@ -62,7 +62,7 @@ jobs:
           RUSTC_BOOTSTRAP: '1'
           RUSTFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
           RUSTDOCFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
-      - uses: cargo-bins/cargo-binstall@v1.10.3
+      - uses: cargo-bins/cargo-binstall@v1.10.7
       - name: Install grcov
         run: cargo binstall --no-confirm grcov@0.8.19
       - name: Run grcov
