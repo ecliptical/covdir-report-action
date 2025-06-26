@@ -1,8 +1,8 @@
-use assert_cmd::{crate_name, Command};
-use assert_fs::{prelude::*, TempDir};
+use assert_cmd::{Command, crate_name};
+use assert_fs::{TempDir, prelude::*};
 use predicates::prelude::*;
 use serde::Deserialize;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::collections::HashMap;
 
 #[derive(Debug, Deserialize)]
