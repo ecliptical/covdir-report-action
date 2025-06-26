@@ -7,7 +7,7 @@ use std::collections::HashMap;
 
 #[derive(Debug, Deserialize)]
 struct Action {
-    outputs: HashMap<String, serde_yaml::Value>,
+    outputs: HashMap<String, serde_yaml_ng::Value>,
 }
 
 fn write_input(f: &impl FileWriteStr, root: &Value) -> anyhow::Result<()> {
@@ -51,7 +51,7 @@ fn full_options() {
         .assert();
     assert.success();
 
-    let action: Action = serde_yaml::from_slice(include_bytes!(concat!(
+    let action: Action = serde_yaml_ng::from_slice(include_bytes!(concat!(
         env!("CARGO_MANIFEST_DIR"),
         "/action.yaml"
     )))
