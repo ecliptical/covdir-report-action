@@ -25,7 +25,7 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          components: rustfmt, clippy
+          components: rustfmt, clippy, llvm-tools
       - name: Check formatting
         run: cargo fmt --all -- --check
       - name: Run clippy
@@ -48,25 +48,22 @@ jobs:
             ~/.cargo/git/db/
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy, llvm-tools
       - name: Build the binary
         run: cargo build
         env:
-          CARGO_INCREMENTAL: '0'
-          RUSTC_BOOTSTRAP: '1'
-          RUSTFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
-          RUSTDOCFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
+          RUSTFLAGS: '-Cinstrument-coverage'
       - name: Run unit tests
         run: cargo test
         env:
-          CARGO_INCREMENTAL: '0'
-          RUSTC_BOOTSTRAP: '1'
-          RUSTFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
-          RUSTDOCFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
+          RUSTFLAGS: '-Cinstrument-coverage'
+          LLVM_PROFILE_FILE: 'target/coverage/%p-%m.profraw'
       - uses: cargo-bins/cargo-binstall@v1.14.1
       - name: Install grcov
         run: cargo binstall --no-confirm grcov@0.10.0
       - name: Run grcov
-        run: grcov . -s . --binary-path ./target/debug/ --excl-start '^mod\s+tests\s*\{$' -t covdir --branch --ignore-not-existing --keep-only 'src/**' -o ./target/covdir.json
+        run: grcov ./target/coverage -s . --binary-path ./target/debug/ --excl-start '^mod\s+tests\s*\{$' -t covdir --branch --ignore-not-existing --keep-only 'src/**' -o ./target/covdir.json
       - name: Generate coverage report
         uses: ecliptical/covdir-report-action@v0.2
         with:
