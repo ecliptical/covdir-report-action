@@ -7,13 +7,11 @@ A [GitHub Action](https://docs.github.com/en/actions) for generating simple code
 Structure your workflow to include the following steps:
 
 1. Check out your code using the [checkout action](https://github.com/actions/checkout).
-2. Install your nightly [Rust toolchain](https://github.com/actions-rs/toolchain). If you prefer to use stable, or anything other than nightly, then you must add `RUSTC_BOOTSTRAP: '1'` in the env section of the cargo steps below.
+2. Install your [Rust toolchain](https://github.com/actions-rs/toolchain). Include the `llvm-tools` component.
 3. Build and test your code (in two separate steps) using the [cargo action](https://github.com/actions-rs/cargo) with some special compiler flags that are required for grcov to work:
   ```yaml
   env:
-    CARGO_INCREMENTAL: '0'
-    RUSTFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
-    RUSTDOCFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
+    RUSTFLAGS: '-Cinstrument-coverage'
   ```
 4. Install grcov using cargo; e.g.,
   ```yaml
@@ -76,39 +74,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out the source code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Install Rust
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: 1.65.0
-          override: true
+          components: llvm-tools
       - name: Build the binary
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
+        run: cargo build
         env:
-          CARGO_INCREMENTAL: '0'
-          RUSTC_BOOTSTRAP: '1'
-          RUSTFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
-          RUSTDOCFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
+          RUSTFLAGS: '-Cinstrument-coverage'
       - name: Run unit tests
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
+        run: cargo test
         env:
-          CARGO_INCREMENTAL: '0'
-          RUSTC_BOOTSTRAP: '1'
-          RUSTFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
-          RUSTDOCFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
+          RUSTFLAGS: '-Cinstrument-coverage'
+          LLVM_PROFILE_FILE: 'target/coverage/%p-%m.profraw'
+      - uses: cargo-bins/cargo-binstall@v1.14.1
       - name: Install grcov
-        uses: actions-rs/cargo@v1
-        with:
-          command: install
-          args: grcov
+        run: cargo binstall --no-confirm grcov@0.10.0
       - name: Run grcov
-        run: grcov . -s . --binary-path ./target/debug/ --excl-start '^mod\s+test(s)?\s*\{$' -t covdir --branch --ignore-not-existing --keep-only 'src/**' -o ./target/covdir.json
+        run: grcov ./target/coverage -s . --binary-path ./target/debug --excl-start '^mod\s+test(s)?\s*\{$' -t covdir --branch --ignore-not-existing --keep-only 'src/**' -o ./target/covdir.json
       - name: Generate coverage report
-        uses: ecliptical/covdir-report-action@v0.1
+        uses: ecliptical/covdir-report-action@v0.2
         with:
           file: ./target/covdir.json
           summary: 'true'
