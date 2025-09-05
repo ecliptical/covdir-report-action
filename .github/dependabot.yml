@@ -4,14 +4,24 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    assignees:
+      - "pnehrer"
+    groups:
+      patch-updates:
+        update-types:
+          - "patch"
   - package-ecosystem: "docker"
     directory: "/"
     schedule:
       interval: "weekly"
+    assignees:
+      - "pnehrer"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
     ignore:
       - dependency-name: "ecliptical/covdir-report-action"
+    assignees:
+      - "pnehrer"
  
