@@ -1,4 +1,4 @@
-use assert_cmd::{Command, crate_name};
+use assert_cmd::cargo::cargo_bin_cmd;
 use assert_fs::{TempDir, prelude::*};
 use predicates::prelude::*;
 use serde::Deserialize;
@@ -37,7 +37,7 @@ fn full_options() {
     let output = tmp_dir.child("output.txt");
     let results = tmp_dir.child("results.md");
 
-    let mut cmd = Command::cargo_bin(crate_name!()).expect("failed to create cmd");
+    let mut cmd = cargo_bin_cmd!();
 
     let assert = cmd
         .env("GITHUB_OUTPUT", output.path())
@@ -69,7 +69,7 @@ fn full_options() {
 fn missing_env() {
     let tmp_dir = TempDir::new().expect("failed to create temp dir");
     let input = tmp_dir.child("covdir.json");
-    let mut cmd = Command::cargo_bin(crate_name!()).expect("failed to create cmd");
+    let mut cmd = cargo_bin_cmd!();
 
     let assert = cmd
         .arg(format!(
