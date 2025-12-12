@@ -61,7 +61,7 @@ jobs:
           LLVM_PROFILE_FILE: 'target/coverage/%p-%m.profraw'
       - uses: cargo-bins/cargo-binstall@v1.16.3
       - name: Install grcov
-        run: cargo binstall --no-confirm grcov@0.10.0
+        run: cargo binstall --no-confirm grcov@0.10.5
       - name: Run grcov
         run: grcov ./target/coverage -s . --binary-path ./target/debug/ --excl-start '^mod\s+tests\s*\{$' -t covdir --branch --ignore-not-existing --keep-only 'src/**' -o ./target/covdir.json
       - name: Generate coverage report
