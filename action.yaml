@@ -49,6 +49,10 @@ outputs:
 runs:
   using: 'docker'
   image: 'Dockerfile'
+  env:
+    # grcov uses tempfile crate which needs a writable temp directory;
+    # GitHub Actions mounts RUNNER_TEMP at /github/runner_temp
+    TMPDIR: /github/runner_temp
   args:
     - "--file=${{ inputs.file }}"
     - "--summary=${{ inputs.summary }}"
