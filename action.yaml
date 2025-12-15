@@ -3,8 +3,8 @@ description: 'Generate a report from grcov-generated covdir output'
 author: 'Peter Nehrer <pnehrer@eclipticalsoftware.com>'
 inputs:
   file:
-    description: 'Path to covdir.json file'
-    required: true
+    description: 'Path to covdir.json file (not needed if using the bundled grcov)'
+    required: false
   summary:
     description: 'Write report to step summary if `true`'
     default: 'false'
@@ -13,6 +13,34 @@ inputs:
   title:
     description: 'Report title'
     default: 'Line coverage'
+  # inputs for the bundled grcov
+  skip_grcov:
+    description: 'Skip bundled grcov and use a pre-generated covdir.json file instead'
+    default: 'false'
+  coverage_path:
+    description: 'Path to coverage data for the bundled grcov'
+    default: './target/coverage'
+  source_dir:
+    description: 'Source directory for grcov (-s flag)'
+    default: '.'
+  binary_path:
+    description: 'Binary path for grcov (--binary-path flag)'
+    default: './target/debug'
+  keep_only:
+    description: 'Keep only files matching pattern (--keep-only flag)'
+    default: 'src/**'
+  excl_start:
+    description: 'Exclude start pattern (--excl-start flag)'
+    default: '^mod\s+tests?\s*\{$'
+  branch:
+    description: 'Include branch coverage (--branch flag)'
+    default: 'true'
+  covdir_output:
+    description: 'Output path for generated covdir.json'
+    default: './target/covdir.json'
+  grcov_args:
+    description: 'Additional arguments to pass to grcov'
+    required: false
 outputs:
   lines_covered:
     description: 'Number of lines covered'
@@ -24,12 +52,21 @@ outputs:
     description: 'Percentage of lines covered'
 runs:
   using: 'docker'
-  image: 'docker://ghcr.io/ecliptical/covdir-report-action:0.2.3'
+  image: 'Dockerfile'
   args:
     - "--file=${{ inputs.file }}"
-    - "--summary=${{ inputs.summary }}" 
-    - "--title=${{ inputs.title }}" 
+    - "--summary=${{ inputs.summary }}"
+    - "--title=${{ inputs.title }}"
     - "--out=${{ inputs.out }}"
+    - "--skip-grcov=${{ inputs.skip_grcov }}"
+    - "--coverage-path=${{ inputs.coverage_path }}"
+    - "--source-dir=${{ inputs.source_dir }}"
+    - "--binary-path=${{ inputs.binary_path }}"
+    - "--keep-only=${{ inputs.keep_only }}"
+    - "--excl-start=${{ inputs.excl_start }}"
+    - "--branch=${{ inputs.branch }}"
+    - "--covdir-output=${{ inputs.covdir_output }}"
+    - "--grcov-args=${{ inputs.grcov_args }}"
 branding:
   icon: award
   color: blue

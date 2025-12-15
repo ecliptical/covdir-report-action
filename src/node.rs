@@ -112,7 +112,7 @@ mod tests {
 
         assert!(res.is_ok());
         let values = res.unwrap();
-        assert_eq!(values.get(0).map(|v| v.0.as_ref()), Some("a"));
+        assert_eq!(values.first().map(|v| v.0.as_ref()), Some("a"));
         assert_eq!(values.get(1).map(|v| v.0.as_ref()), Some("b"));
     }
 }

@@ -4,10 +4,34 @@ use std::env;
 use std::fs::File;
 use std::io::{BufReader, BufWriter, Write};
 use std::path::PathBuf;
+use std::process::Command;
 
 mod node;
 
 use crate::node::Node;
+
+/// grcov configuration options
+#[derive(Debug, Default)]
+struct GrcovConfig {
+    /// Skip bundled grcov (use pre-generated covdir.json instead)
+    skip_grcov: bool,
+    /// Path to coverage data for grcov integration
+    coverage_path: PathBuf,
+    /// Source directory for grcov (-s flag)
+    source_dir: String,
+    /// Binary path for grcov (--binary-path flag)
+    binary_path: String,
+    /// Keep only files matching pattern (--keep-only flag)
+    keep_only: String,
+    /// Exclude start pattern (--excl-start flag)
+    excl_start: String,
+    /// Include branch coverage (--branch flag)
+    branch: bool,
+    /// Output path for generated covdir.json
+    covdir_output: String,
+    /// Additional arguments to pass to grcov
+    grcov_args: String,
+}
 
 #[derive(Debug, Default)]
 struct Cmd {
@@ -20,8 +44,53 @@ struct Cmd {
     /// Write job summary.
     summary: bool,
 
-    /// Report tile.
+    /// Report title.
     title: String,
+
+    /// grcov configuration (if using integrated grcov)
+    grcov: GrcovConfig,
+}
+
+/// Run grcov to generate covdir.json and return the output path
+fn run_grcov(config: &GrcovConfig) -> anyhow::Result<PathBuf> {
+    println!("::group::Running grcov");
+
+    let mut cmd = Command::new("/usr/local/bin/grcov");
+    cmd.arg(&config.coverage_path);
+    cmd.args(["-s", &config.source_dir]);
+    cmd.args(["--binary-path", &config.binary_path]);
+    cmd.args(["-t", "covdir"]);
+    cmd.arg("--ignore-not-existing");
+
+    if !config.keep_only.is_empty() {
+        cmd.args(["--keep-only", &config.keep_only]);
+    }
+
+    if !config.excl_start.is_empty() {
+        cmd.args(["--excl-start", &config.excl_start]);
+    }
+
+    if config.branch {
+        cmd.arg("--branch");
+    }
+
+    // Parse additional arguments if provided
+    if !config.grcov_args.is_empty() {
+        cmd.args(config.grcov_args.split_whitespace());
+    }
+
+    cmd.args(["-o", &config.covdir_output]);
+
+    debug!("Running grcov: {cmd:?}");
+
+    let status = cmd.status()?;
+    println!("::endgroup::");
+
+    if !status.success() {
+        bail!("grcov failed with exit code: {}", status);
+    }
+
+    Ok(PathBuf::from(&config.covdir_output))
 }
 
 fn write_output(file: impl Write, root: &Node) -> std::io::Result<()> {
@@ -82,13 +151,34 @@ fn main() -> anyhow::Result<()> {
             "--summary" => opt.summary = value == "true",
             "--title" => opt.title = value.to_string(),
             "--out" => opt.out = value.into(),
+            // grcov integration options
+            "--skip-grcov" => opt.grcov.skip_grcov = value == "true",
+            "--coverage-path" => opt.grcov.coverage_path = value.into(),
+            "--source-dir" => opt.grcov.source_dir = value.to_string(),
+            "--binary-path" => opt.grcov.binary_path = value.to_string(),
+            "--keep-only" => opt.grcov.keep_only = value.to_string(),
+            "--excl-start" => opt.grcov.excl_start = value.to_string(),
+            "--branch" => opt.grcov.branch = value == "true",
+            "--covdir-output" => opt.grcov.covdir_output = value.to_string(),
+            "--grcov-args" => opt.grcov.grcov_args = value.to_string(),
             _ => bail!("unknown argument: {name}"),
         }
     }
 
     debug!("opt = {opt:#?}");
 
-    let file = File::open(opt.file)?;
+    // If skip_grcov is false and coverage_path is provided, run grcov first
+    let input_file = if !opt.grcov.skip_grcov && !opt.grcov.coverage_path.as_os_str().is_empty() {
+        run_grcov(&opt.grcov)?
+    } else {
+        opt.file
+    };
+
+    if input_file.as_os_str().is_empty() {
+        bail!("either --file or --coverage-path must be provided");
+    }
+
+    let file = File::open(&input_file)?;
     let reader = BufReader::new(file);
 
     let root: Node = serde_json::from_reader(reader)?;
