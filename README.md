@@ -2,50 +2,82 @@
 
 A [GitHub Action](https://docs.github.com/en/actions) for generating simple code coverage reports from [grcov-generated covdir files](https://github.com/mozilla/grcov#alternative-reports).
 
-## Usage
+This action includes grcov and can run it automatically, or you can provide a pre-generated covdir.json file.
 
-Structure your workflow to include the following steps:
+## Quick Start
 
-1. Check out your code using the [checkout action](https://github.com/actions/checkout).
-2. Install your [Rust toolchain](https://github.com/actions-rs/toolchain). Include the `llvm-tools` component.
-3. Build and test your code (in two separate steps) using the [cargo action](https://github.com/actions-rs/cargo) with some special compiler flags that are required for grcov to work:
-  ```yaml
-  env:
-    RUSTFLAGS: '-Cinstrument-coverage'
-  ```
-4. Install grcov using cargo; e.g.,
-  ```yaml
-    - uses: actions-rs/cargo@v1
-      with:
-        command: install
-        args: grcov
-  ```
-5. Run grcov in the root of your workspace, specifying `covdir` as the output format and the path to the output file (e.g., ./target/covdir.json). Add any other arguments required for your particular project; e.g.,
-  ```yaml
-    - run: grcov . -s . --binary-path ./target/debug/ --excl-start '^mod\s+tests\s*\{$' -t covdir --branch --ignore-not-existing --keep-only 'src/**' -o ./target/covdir.json
-  ```
-6. Finally, run this action, passing the path to the previously generated covdir.json file as the minimum input:
-  ```yaml
-    - uses: ecliptical/covdir-report-action@v1
-      with:
-        file: ./covdir.json
-  ```
+The simplest way to use this action is with the bundled grcov (enabled by default):
 
-By default, the action only produces output variables with values from the root node of the covdir.json file:
+```yaml
+on:
+  pull_request:
+  push:
+    branches:
+      - main
 
-- lines_covered
-- lines_missed
-- lines_total
-- coverage_percent
+name: Rust Coverage
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: llvm-tools
+      - name: Build
+        run: cargo build
+        env:
+          RUSTFLAGS: '-Cinstrument-coverage'
+      - name: Test
+        run: cargo test
+        env:
+          RUSTFLAGS: '-Cinstrument-coverage'
+          LLVM_PROFILE_FILE: 'target/coverage/%p-%m.profraw'
+      - name: Generate coverage report
+        uses: ecliptical/covdir-report-action@v0.3
+        with:
+          summary: 'true'
+```
+
+## Usage with Pre-generated covdir.json
+
+If you prefer to run grcov yourself (for more control over its options), you can disable the built-in grcov integration and pass a pre-generated covdir.json file:
+
+```yaml
+- uses: ecliptical/covdir-report-action@v0.3
+  with:
+    skip_grcov: 'true'
+    file: ./target/covdir.json
+    summary: 'true'
+```
 
 ## Inputs
 
+### Report Inputs
+
 | ID | Description | Required | Default |
 | --- | --- | --- | --- |
-| file | Path to covdir.json file | yes | |
+| file | Path to covdir.json file (not needed if using `coverage_path`) | no | |
 | summary | Write report to step summary if `true` | no | `false` |
 | out | Write report to the given file | no | |
-| title | Report title | no | Line coverage |
+| title | Report title | no | `Line coverage` |
+
+### Bundled grcov Inputs
+
+These inputs control the bundled grcov, which is enabled by default.
+
+| ID | Description | Required | Default |
+| --- | --- | --- | --- |
+| skip_grcov | Skip bundled grcov and use a pre-generated covdir.json file | no | `false` |
+| coverage_path | Path to coverage data | no | `./target/coverage` |
+| source_dir | Source directory for grcov (`-s` flag) | no | `.` |
+| binary_path | Binary path for grcov (`--binary-path` flag) | no | `./target/debug` |
+| keep_only | Keep only files matching pattern (`--keep-only` flag) | no | `src/**` |
+| excl_start | Exclude start pattern (`--excl-start` flag) | no | `^mod\s+tests?\s*\{$` |
+| branch | Include branch coverage (`--branch` flag) | no | `true` |
+| covdir_output | Output path for generated covdir.json | no | `./target/covdir.json` |
+| grcov_args | Additional arguments to pass to grcov | no | |
 
 ## Outputs
 
@@ -58,7 +90,7 @@ By default, the action only produces output variables with values from the root 
 
 ## Example
 
-An example workflow that builds and runs unit tests, collects test coverage, generates a simple markdown report, outputs it as the job sunmmary and posts it as a PR comment:
+An example workflow that builds and runs unit tests, collects test coverage, generates a simple markdown report, outputs it as the job summary and posts it as a PR comment:
 
 ```yaml
 on:
@@ -74,7 +106,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out the source code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -88,15 +120,9 @@ jobs:
         env:
           RUSTFLAGS: '-Cinstrument-coverage'
           LLVM_PROFILE_FILE: 'target/coverage/%p-%m.profraw'
-      - uses: cargo-bins/cargo-binstall@v1.14.1
-      - name: Install grcov
-        run: cargo binstall --no-confirm grcov@0.10.0
-      - name: Run grcov
-        run: grcov ./target/coverage -s . --binary-path ./target/debug --excl-start '^mod\s+test(s)?\s*\{$' -t covdir --branch --ignore-not-existing --keep-only 'src/**' -o ./target/covdir.json
       - name: Generate coverage report
-        uses: ecliptical/covdir-report-action@v0.2
+        uses: ecliptical/covdir-report-action@v0.3
         with:
-          file: ./target/covdir.json
           summary: 'true'
           out: ./target/coverage.md
       - name: Add coverage comment to the pull request
@@ -107,3 +133,6 @@ jobs:
           hide_classify: "OUTDATED"
           path: ./target/coverage.md
 ```
+## Third-Party Software
+
+This action bundles [grcov](https://github.com/mozilla/grcov), a code coverage tool by Mozilla, which is licensed under the [Mozilla Public License 2.0 (MPL-2.0)](https://github.com/mozilla/grcov/blob/master/LICENSE-MPL-2.0). The grcov source code is available at https://github.com/mozilla/grcov.
