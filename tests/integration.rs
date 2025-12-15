@@ -48,6 +48,7 @@ fn full_options() {
         ))
         .arg("--summary=true")
         .arg(format!("--out={}", results.path().to_string_lossy()))
+        .arg("--skip-grcov=true")
         .assert();
     assert.success();
 

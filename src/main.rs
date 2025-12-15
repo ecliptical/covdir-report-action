@@ -27,8 +27,6 @@ struct GrcovConfig {
     excl_start: String,
     /// Include branch coverage (--branch flag)
     branch: bool,
-    /// Output path for generated covdir.json
-    covdir_output: String,
     /// Additional arguments to pass to grcov
     grcov_args: String,
 }
@@ -51,8 +49,8 @@ struct Cmd {
     grcov: GrcovConfig,
 }
 
-/// Run grcov to generate covdir.json and return the output path
-fn run_grcov(config: &GrcovConfig) -> anyhow::Result<PathBuf> {
+/// Run grcov to generate covdir.json
+fn run_grcov(config: &GrcovConfig, output_path: &str) -> anyhow::Result<()> {
     println!("::group::Running grcov");
 
     let mut cmd = Command::new("/usr/local/bin/grcov");
@@ -79,7 +77,7 @@ fn run_grcov(config: &GrcovConfig) -> anyhow::Result<PathBuf> {
         cmd.args(config.grcov_args.split_whitespace());
     }
 
-    cmd.args(["-o", &config.covdir_output]);
+    cmd.args(["-o", output_path]);
 
     debug!("Running grcov: {cmd:?}");
 
@@ -90,7 +88,7 @@ fn run_grcov(config: &GrcovConfig) -> anyhow::Result<PathBuf> {
         bail!("grcov failed with exit code: {}", status);
     }
 
-    Ok(PathBuf::from(&config.covdir_output))
+    Ok(())
 }
 
 fn write_output(file: impl Write, root: &Node) -> std::io::Result<()> {
@@ -159,7 +157,6 @@ fn main() -> anyhow::Result<()> {
             "--keep-only" => opt.grcov.keep_only = value.to_string(),
             "--excl-start" => opt.grcov.excl_start = value.to_string(),
             "--branch" => opt.grcov.branch = value == "true",
-            "--covdir-output" => opt.grcov.covdir_output = value.to_string(),
             "--grcov-args" => opt.grcov.grcov_args = value.to_string(),
             _ => bail!("unknown argument: {name}"),
         }
@@ -167,18 +164,11 @@ fn main() -> anyhow::Result<()> {
 
     debug!("opt = {opt:#?}");
 
-    // If skip_grcov is false and coverage_path is provided, run grcov first
-    let input_file = if !opt.grcov.skip_grcov && !opt.grcov.coverage_path.as_os_str().is_empty() {
-        run_grcov(&opt.grcov)?
-    } else {
-        opt.file
-    };
-
-    if input_file.as_os_str().is_empty() {
-        bail!("either --file or --coverage-path must be provided");
+    if !opt.grcov.skip_grcov {
+        run_grcov(&opt.grcov, &opt.file.to_string_lossy())?;
     }
 
-    let file = File::open(&input_file)?;
+    let file = File::open(&opt.file)?;
     let reader = BufReader::new(file);
 
     let root: Node = serde_json::from_reader(reader)?;

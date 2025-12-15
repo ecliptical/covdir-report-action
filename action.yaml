@@ -3,8 +3,8 @@ description: 'Generate a report from grcov-generated covdir output'
 author: 'Peter Nehrer <pnehrer@eclipticalsoftware.com>'
 inputs:
   file:
-    description: 'Path to covdir.json file (not needed if using the bundled grcov)'
-    required: false
+    description: 'Path to covdir.json file'
+    default: './target/covdir.json'
   summary:
     description: 'Write report to step summary if `true`'
     default: 'false'
@@ -35,12 +35,8 @@ inputs:
   branch:
     description: 'Include branch coverage (--branch flag)'
     default: 'true'
-  covdir_output:
-    description: 'Output path for generated covdir.json'
-    default: './target/covdir.json'
   grcov_args:
     description: 'Additional arguments to pass to grcov'
-    required: false
 outputs:
   lines_covered:
     description: 'Number of lines covered'
@@ -65,7 +61,6 @@ runs:
     - "--keep-only=${{ inputs.keep_only }}"
     - "--excl-start=${{ inputs.excl_start }}"
     - "--branch=${{ inputs.branch }}"
-    - "--covdir-output=${{ inputs.covdir_output }}"
     - "--grcov-args=${{ inputs.grcov_args }}"
 branding:
   icon: award
