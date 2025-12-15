@@ -58,6 +58,7 @@ fn run_grcov(config: &GrcovConfig, output_path: &str) -> anyhow::Result<()> {
     cmd.args(["-s", &config.source_dir]);
     cmd.args(["--binary-path", &config.binary_path]);
     cmd.args(["-t", "covdir"]);
+    cmd.arg("--llvm");
     cmd.arg("--ignore-not-existing");
 
     if !config.keep_only.is_empty() {
