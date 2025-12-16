@@ -54,7 +54,7 @@ If you prefer to run grcov yourself (for more control over its options), you can
 
 | ID | Description | Required | Default |
 | --- | --- | --- | --- |
-| file | Path to covdir.json file (not needed if using `coverage_path`) | no | |
+| file | Path to covdir.json file | no | `./target/covdir.json` |
 | summary | Write report to step summary if `true` | no | `false` |
 | out | Write report to the given file | no | |
 | title | Report title | no | `Line coverage` |
@@ -72,8 +72,9 @@ These inputs control the bundled grcov, which is enabled by default.
 | keep_only | Keep only files matching pattern (`--keep-only` flag) | no | `src/**` |
 | excl_start | Exclude start pattern (`--excl-start` flag) | no | `^mod\s+tests?\s*\{$` |
 | branch | Include branch coverage (`--branch` flag) | no | `true` |
-| covdir_output | Output path for generated covdir.json | no | `./target/covdir.json` |
 | grcov_args | Additional arguments to pass to grcov | no | |
+| version | Version of the action binaries to use | no | `0.3.0` |
+| grcov_version | Version of grcov to use | no | `0.10.5` |
 
 ## Outputs
 
@@ -125,6 +126,7 @@ jobs:
           hide_classify: "OUTDATED"
           path: ./target/coverage.md
 ```
+
 ## Third-Party Software
 
 This action downloads and uses [grcov](https://github.com/mozilla/grcov), a code coverage tool by Mozilla, which is licensed under the [Mozilla Public License 2.0 (MPL-2.0)](https://github.com/mozilla/grcov/blob/master/LICENSE-MPL-2.0). The grcov source code is available at https://github.com/mozilla/grcov.
