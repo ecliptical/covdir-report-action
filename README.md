@@ -2,7 +2,7 @@
 
 A [GitHub Action](https://docs.github.com/en/actions) for generating simple code coverage reports from [grcov-generated covdir files](https://github.com/mozilla/grcov#alternative-reports).
 
-This action includes grcov and can run it automatically, or you can provide a pre-generated covdir.json file.
+This action includes [grcov](https://github.com/mozilla/grcov) and LLVM tools (`llvm-profdata`, `llvm-cov`) bundled in the Docker image, so you don't need to install them separately. It can run grcov automatically, or you can provide a pre-generated covdir.json file.
 
 ## Quick Start
 

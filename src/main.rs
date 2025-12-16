@@ -59,6 +59,9 @@ fn run_grcov(config: &GrcovConfig, output_path: &str) -> anyhow::Result<()> {
     cmd.args(["--binary-path", &config.binary_path]);
     cmd.args(["-t", "covdir"]);
     cmd.arg("--llvm");
+    if let Ok(llvm_path) = env::var("LLVM_PATH") {
+        cmd.args(["--llvm-path", &llvm_path]);
+    }
     cmd.arg("--ignore-not-existing");
 
     if !config.keep_only.is_empty() {
@@ -82,11 +85,26 @@ fn run_grcov(config: &GrcovConfig, output_path: &str) -> anyhow::Result<()> {
 
     debug!("Running grcov: {cmd:?}");
 
-    let status = cmd.status()?;
+    let output = cmd.output()?;
+
+    // Print stdout/stderr for visibility
+    if !output.stdout.is_empty() {
+        print!("{}", String::from_utf8_lossy(&output.stdout));
+    }
+    if !output.stderr.is_empty() {
+        eprint!("{}", String::from_utf8_lossy(&output.stderr));
+    }
+
     println!("::endgroup::");
 
-    if !status.success() {
-        bail!("grcov failed with exit code: {}", status);
+    if !output.status.success() {
+        bail!("grcov failed with exit code: {}", output.status);
+    }
+
+    // grcov may exit 0 even on errors, so check stderr for error messages
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    if stderr.contains("[ERROR]") {
+        bail!("grcov reported an error: {}", stderr.trim());
     }
 
     Ok(())
