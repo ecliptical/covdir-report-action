@@ -10,12 +10,6 @@ updates:
       patch-updates:
         update-types:
           - "patch"
-  - package-ecosystem: "docker"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    assignees:
-      - "pnehrer"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
