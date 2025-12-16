@@ -1,8 +1,20 @@
 on:
   pull_request:
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'Cargo.*'
+      - .rustfmt.toml
+      - '.github/workflows/rust-ci.yaml'
   push:
     branches:
       - main
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'Cargo.*'
+      - .rustfmt.toml
+      - '.github/workflows/rust-ci.yaml'
 
 name: Rust CI
 
