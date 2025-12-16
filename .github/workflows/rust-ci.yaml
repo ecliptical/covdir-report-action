@@ -50,17 +50,13 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy, llvm-tools
-      - name: Build the binary
-        run: cargo build
-        env:
-          RUSTFLAGS: '-Cinstrument-coverage'
       - name: Run unit tests
         run: cargo test
         env:
           RUSTFLAGS: '-Cinstrument-coverage'
           LLVM_PROFILE_FILE: 'target/coverage/%p-%m.profraw'
       - name: Generate coverage report
-        uses: ecliptical/covdir-report-action@v0.3
+        uses: ./
         with:
           summary: 'true'
           out: ./target/coverage.md

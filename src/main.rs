@@ -53,7 +53,12 @@ struct Cmd {
 fn run_grcov(config: &GrcovConfig, output_path: &str) -> anyhow::Result<()> {
     println!("::group::Running grcov");
 
-    let mut cmd = Command::new("/usr/local/bin/grcov");
+    // Look for grcov in GRCOV_PATH first, then fall back to system PATH
+    let grcov_path = env::var("GRCOV_PATH")
+        .map(|p| format!("{}/grcov", p))
+        .unwrap_or_else(|_| "grcov".to_string());
+
+    let mut cmd = Command::new(&grcov_path);
     cmd.arg(&config.coverage_path);
     cmd.args(["-s", &config.source_dir]);
     cmd.args(["--binary-path", &config.binary_path]);
