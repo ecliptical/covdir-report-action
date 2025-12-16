@@ -2,7 +2,7 @@
 
 A [GitHub Action](https://docs.github.com/en/actions) for generating simple code coverage reports from [grcov-generated covdir files](https://github.com/mozilla/grcov#alternative-reports).
 
-This action includes [grcov](https://github.com/mozilla/grcov) and LLVM tools (`llvm-profdata`, `llvm-cov`) bundled in the Docker image, so you don't need to install them separately. It can run grcov automatically, or you can provide a pre-generated covdir.json file.
+This action downloads [grcov](https://github.com/mozilla/grcov) automatically and uses your project's LLVM tools (from `rustup component add llvm-tools`) to process coverage data.
 
 ## Quick Start
 
@@ -25,10 +25,6 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: llvm-tools
-      - name: Build
-        run: cargo build
-        env:
-          RUSTFLAGS: '-Cinstrument-coverage'
       - name: Test
         run: cargo test
         env:
@@ -90,7 +86,7 @@ These inputs control the bundled grcov, which is enabled by default.
 
 ## Example
 
-An example workflow that builds and runs unit tests, collects test coverage, generates a simple markdown report, outputs it as the job summary and posts it as a PR comment:
+An example workflow that runs unit tests with coverage, generates a simple markdown report, outputs it as the job summary and posts it as a PR comment:
 
 ```yaml
 on:
@@ -111,10 +107,6 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           components: llvm-tools
-      - name: Build the binary
-        run: cargo build
-        env:
-          RUSTFLAGS: '-Cinstrument-coverage'
       - name: Run unit tests
         run: cargo test
         env:
@@ -135,4 +127,4 @@ jobs:
 ```
 ## Third-Party Software
 
-This action bundles [grcov](https://github.com/mozilla/grcov), a code coverage tool by Mozilla, which is licensed under the [Mozilla Public License 2.0 (MPL-2.0)](https://github.com/mozilla/grcov/blob/master/LICENSE-MPL-2.0). The grcov source code is available at https://github.com/mozilla/grcov.
+This action downloads and uses [grcov](https://github.com/mozilla/grcov), a code coverage tool by Mozilla, which is licensed under the [Mozilla Public License 2.0 (MPL-2.0)](https://github.com/mozilla/grcov/blob/master/LICENSE-MPL-2.0). The grcov source code is available at https://github.com/mozilla/grcov.

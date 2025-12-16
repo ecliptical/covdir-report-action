@@ -37,35 +37,107 @@ inputs:
     default: 'true'
   grcov_args:
     description: 'Additional arguments to pass to grcov'
+  version:
+    description: 'Version of the action binaries to use'
+    default: '0.3.0'
+  grcov_version:
+    description: 'Version of grcov to use'
+    default: '0.10.5'
 outputs:
   lines_covered:
     description: 'Number of lines covered'
+    value: ${{ steps.report.outputs.lines_covered }}
   lines_missed:
     description: 'Number of lines missed'
+    value: ${{ steps.report.outputs.lines_missed }}
   lines_total:
     description: 'Total number of lines'
+    value: ${{ steps.report.outputs.lines_total }}
   coverage_percent:
     description: 'Percentage of lines covered'
+    value: ${{ steps.report.outputs.coverage_percent }}
 runs:
-  using: 'docker'
-  image: 'docker://ghcr.io/ecliptical/covdir-report-action:0.3.0'
-  env:
-    # grcov uses tempfile crate which needs a writable temp directory;
-    # GitHub Actions mounts RUNNER_TEMP at /github/runner_temp
-    TMPDIR: /github/runner_temp
-  args:
-    - "--file=${{ inputs.file }}"
-    - "--summary=${{ inputs.summary }}"
-    - "--title=${{ inputs.title }}"
-    - "--out=${{ inputs.out }}"
-    - "--skip-grcov=${{ inputs.skip_grcov }}"
-    - "--coverage-path=${{ inputs.coverage_path }}"
-    - "--source-dir=${{ inputs.source_dir }}"
-    - "--binary-path=${{ inputs.binary_path }}"
-    - "--keep-only=${{ inputs.keep_only }}"
-    - "--excl-start=${{ inputs.excl_start }}"
-    - "--branch=${{ inputs.branch }}"
-    - "--grcov-args=${{ inputs.grcov_args }}"
+  using: 'composite'
+  steps:
+    - name: Determine platform
+      id: platform
+      shell: bash
+      run: |
+        case "${{ runner.os }}-${{ runner.arch }}" in
+          Linux-X64)
+            echo "target=x86_64-unknown-linux-gnu" >> $GITHUB_OUTPUT
+            echo "grcov_target=x86_64-unknown-linux-gnu" >> $GITHUB_OUTPUT
+            ;;
+          Linux-ARM64)
+            echo "target=aarch64-unknown-linux-gnu" >> $GITHUB_OUTPUT
+            echo "grcov_target=aarch64-unknown-linux-gnu" >> $GITHUB_OUTPUT
+            ;;
+          macOS-X64)
+            echo "target=x86_64-apple-darwin" >> $GITHUB_OUTPUT
+            echo "grcov_target=x86_64-apple-darwin" >> $GITHUB_OUTPUT
+            ;;
+          macOS-ARM64)
+            echo "target=aarch64-apple-darwin" >> $GITHUB_OUTPUT
+            echo "grcov_target=aarch64-apple-darwin" >> $GITHUB_OUTPUT
+            ;;
+          *)
+            echo "::error::Unsupported platform: ${{ runner.os }}-${{ runner.arch }}"
+            exit 1
+            ;;
+        esac
+
+    - name: Download and install covdir-report-action
+      shell: bash
+      run: |
+        mkdir -p "${{ runner.temp }}/covdir-action"
+        cd "${{ runner.temp }}/covdir-action"
+        curl -sL "https://github.com/ecliptical/covdir-report-action/releases/download/v${{ inputs.version }}/covdir-report-action-${{ steps.platform.outputs.target }}.tar.gz" \
+          | tar xzf -
+        chmod +x covdir-report-action
+
+    - name: Download and install grcov
+      if: inputs.skip_grcov != 'true'
+      shell: bash
+      run: |
+        cd "${{ runner.temp }}/covdir-action"
+        curl -sL "https://github.com/mozilla/grcov/releases/download/v${{ inputs.grcov_version }}/grcov-${{ steps.platform.outputs.grcov_target }}.tar.bz2" \
+          | tar xjf -
+        chmod +x grcov
+
+    - name: Set up llvm-tools path
+      if: inputs.skip_grcov != 'true'
+      id: llvm
+      shell: bash
+      run: |
+        # Find llvm-tools from rustup
+        LLVM_PROFDATA=$(rustc --print sysroot)/lib/rustlib/${{ steps.platform.outputs.target }}/bin/llvm-profdata
+        if [ -f "$LLVM_PROFDATA" ]; then
+          echo "path=$(dirname "$LLVM_PROFDATA")" >> $GITHUB_OUTPUT
+        else
+          echo "::error::llvm-tools not found. Please add 'llvm-tools' component: rustup component add llvm-tools"
+          exit 1
+        fi
+
+    - name: Run covdir-report-action
+      id: report
+      shell: bash
+      env:
+        LLVM_PATH: ${{ steps.llvm.outputs.path }}
+        GRCOV_PATH: ${{ runner.temp }}/covdir-action
+      run: |
+        "${{ runner.temp }}/covdir-action/covdir-report-action" \
+          "--file=${{ inputs.file }}" \
+          "--summary=${{ inputs.summary }}" \
+          "--title=${{ inputs.title }}" \
+          "--out=${{ inputs.out }}" \
+          "--skip-grcov=${{ inputs.skip_grcov }}" \
+          "--coverage-path=${{ inputs.coverage_path }}" \
+          "--source-dir=${{ inputs.source_dir }}" \
+          "--binary-path=${{ inputs.binary_path }}" \
+          "--keep-only=${{ inputs.keep_only }}" \
+          "--excl-start=${{ inputs.excl_start }}" \
+          "--branch=${{ inputs.branch }}" \
+          "--grcov-args=${{ inputs.grcov_args }}"
 branding:
   icon: award
   color: blue
