@@ -12,9 +12,10 @@ RUN cargo install --path .
 
 FROM alpine:3.22
 # Install LLVM tools with zlib support for compressed profile data
-RUN apk add --no-cache llvm18 \
-    && ln -s /usr/lib/llvm18/bin/llvm-profdata /usr/local/bin/llvm-profdata \
-    && ln -s /usr/lib/llvm18/bin/llvm-cov /usr/local/bin/llvm-cov
+# Must match the LLVM version used by rustc on the GitHub runner (Rust 1.91+ uses LLVM 19)
+RUN apk add --no-cache llvm19 \
+    && ln -s /usr/lib/llvm19/bin/llvm-profdata /usr/local/bin/llvm-profdata \
+    && ln -s /usr/lib/llvm19/bin/llvm-cov /usr/local/bin/llvm-cov
 COPY --from=builder /usr/local/bin/grcov /usr/local/bin/grcov
 COPY --from=builder /usr/local/cargo/bin/covdir-report-action /usr/local/bin/covdir-report-action
 # Default LLVM tools path (can be overridden)
