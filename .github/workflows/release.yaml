@@ -62,7 +62,7 @@ jobs:
           cd ../../..
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: covdir-report-action-${{ matrix.target }}
           path: covdir-report-action-${{ matrix.target }}.tar.gz
