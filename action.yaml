@@ -118,7 +118,7 @@ runs:
       env:
         INPUT_VERSION: ${{ inputs.version }}
         ACTION_REF: ${{ github.action_ref }}
-        FALLBACK_VERSION: '0.4.1'
+        FALLBACK_VERSION: '0.4.2'
       run: |
         if [ -n "$INPUT_VERSION" ]; then
           resolved="$INPUT_VERSION"
@@ -136,8 +136,10 @@ runs:
         cd "${{ runner.temp }}/covdir-action"
         ARCHIVE="covdir-report-action-${{ steps.platform.outputs.target }}.${{ steps.platform.outputs.archive_ext }}"
         curl -fsSLo "$ARCHIVE" "https://github.com/ecliptical/covdir-report-action/releases/download/v${{ steps.version.outputs.version }}/$ARCHIVE"
-        # bsdtar (the default `tar` on Windows runners) handles zip transparently
-        tar xf "$ARCHIVE"
+        case "${{ steps.platform.outputs.archive_ext }}" in
+          zip) unzip -o "$ARCHIVE" ;;
+          *)   tar xf "$ARCHIVE" ;;
+        esac
         rm -f "$ARCHIVE"
         if [ "${{ runner.os }}" != "Windows" ]; then
           chmod +x covdir-report-action
@@ -150,7 +152,10 @@ runs:
         cd "${{ runner.temp }}/covdir-action"
         ARCHIVE="grcov-${{ steps.platform.outputs.grcov_target }}.${{ steps.platform.outputs.grcov_archive_ext }}"
         curl -fsSLo "$ARCHIVE" "https://github.com/mozilla/grcov/releases/download/v${{ inputs.grcov_version }}/$ARCHIVE"
-        tar xf "$ARCHIVE"
+        case "${{ steps.platform.outputs.grcov_archive_ext }}" in
+          zip) unzip -o "$ARCHIVE" ;;
+          *)   tar xf "$ARCHIVE" ;;
+        esac
         rm -f "$ARCHIVE"
         if [ "${{ runner.os }}" != "Windows" ]; then
           chmod +x grcov
