@@ -36,10 +36,6 @@ jobs:
             os: windows-latest
             archive_ext: zip
             exe_suffix: .exe
-          - target: aarch64-pc-windows-msvc
-            os: windows-latest
-            archive_ext: zip
-            exe_suffix: .exe
 
     steps:
       - name: Checkout repository

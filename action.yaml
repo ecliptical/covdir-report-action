@@ -99,13 +99,6 @@ runs:
             echo "grcov_archive_ext=zip" >> $GITHUB_OUTPUT
             echo "exe_suffix=.exe" >> $GITHUB_OUTPUT
             ;;
-          Windows-ARM64)
-            echo "target=aarch64-pc-windows-msvc" >> $GITHUB_OUTPUT
-            echo "grcov_target=aarch64-pc-windows-msvc" >> $GITHUB_OUTPUT
-            echo "archive_ext=zip" >> $GITHUB_OUTPUT
-            echo "grcov_archive_ext=zip" >> $GITHUB_OUTPUT
-            echo "exe_suffix=.exe" >> $GITHUB_OUTPUT
-            ;;
           *)
             echo "::error::Unsupported platform: ${{ runner.os }}-${{ runner.arch }}"
             exit 1
