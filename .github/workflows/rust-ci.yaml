@@ -4,7 +4,7 @@ on:
       - 'src/**'
       - 'tests/**'
       - 'Cargo.*'
-      - .rustfmt.toml
+      - '.rustfmt.toml'
       - '.github/workflows/rust-ci.yaml'
   push:
     branches:
@@ -13,7 +13,7 @@ on:
       - 'src/**'
       - 'tests/**'
       - 'Cargo.*'
-      - .rustfmt.toml
+      - '.rustfmt.toml'
       - '.github/workflows/rust-ci.yaml'
 
 name: Rust CI

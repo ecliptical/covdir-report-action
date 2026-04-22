@@ -55,7 +55,7 @@ fn run_grcov(config: &GrcovConfig, output_path: &str) -> anyhow::Result<()> {
 
     // Look for grcov in GRCOV_PATH first, then fall back to system PATH
     let grcov_path = env::var("GRCOV_PATH")
-        .map(|p| format!("{}/grcov", p))
+        .map(|p| format!("{}/grcov{}", p, env::consts::EXE_SUFFIX))
         .unwrap_or_else(|_| "grcov".to_string());
 
     let mut cmd = Command::new(&grcov_path);

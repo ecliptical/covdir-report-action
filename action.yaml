@@ -67,18 +67,44 @@ runs:
           Linux-X64)
             echo "target=x86_64-unknown-linux-gnu" >> $GITHUB_OUTPUT
             echo "grcov_target=x86_64-unknown-linux-gnu" >> $GITHUB_OUTPUT
+            echo "archive_ext=tar.gz" >> $GITHUB_OUTPUT
+            echo "grcov_archive_ext=tar.bz2" >> $GITHUB_OUTPUT
+            echo "exe_suffix=" >> $GITHUB_OUTPUT
             ;;
           Linux-ARM64)
             echo "target=aarch64-unknown-linux-gnu" >> $GITHUB_OUTPUT
             echo "grcov_target=aarch64-unknown-linux-gnu" >> $GITHUB_OUTPUT
+            echo "archive_ext=tar.gz" >> $GITHUB_OUTPUT
+            echo "grcov_archive_ext=tar.bz2" >> $GITHUB_OUTPUT
+            echo "exe_suffix=" >> $GITHUB_OUTPUT
             ;;
           macOS-X64)
             echo "target=x86_64-apple-darwin" >> $GITHUB_OUTPUT
             echo "grcov_target=x86_64-apple-darwin" >> $GITHUB_OUTPUT
+            echo "archive_ext=tar.gz" >> $GITHUB_OUTPUT
+            echo "grcov_archive_ext=tar.bz2" >> $GITHUB_OUTPUT
+            echo "exe_suffix=" >> $GITHUB_OUTPUT
             ;;
           macOS-ARM64)
             echo "target=aarch64-apple-darwin" >> $GITHUB_OUTPUT
             echo "grcov_target=aarch64-apple-darwin" >> $GITHUB_OUTPUT
+            echo "archive_ext=tar.gz" >> $GITHUB_OUTPUT
+            echo "grcov_archive_ext=tar.bz2" >> $GITHUB_OUTPUT
+            echo "exe_suffix=" >> $GITHUB_OUTPUT
+            ;;
+          Windows-X64)
+            echo "target=x86_64-pc-windows-msvc" >> $GITHUB_OUTPUT
+            echo "grcov_target=x86_64-pc-windows-msvc" >> $GITHUB_OUTPUT
+            echo "archive_ext=zip" >> $GITHUB_OUTPUT
+            echo "grcov_archive_ext=zip" >> $GITHUB_OUTPUT
+            echo "exe_suffix=.exe" >> $GITHUB_OUTPUT
+            ;;
+          Windows-ARM64)
+            echo "target=aarch64-pc-windows-msvc" >> $GITHUB_OUTPUT
+            echo "grcov_target=aarch64-pc-windows-msvc" >> $GITHUB_OUTPUT
+            echo "archive_ext=zip" >> $GITHUB_OUTPUT
+            echo "grcov_archive_ext=zip" >> $GITHUB_OUTPUT
+            echo "exe_suffix=.exe" >> $GITHUB_OUTPUT
             ;;
           *)
             echo "::error::Unsupported platform: ${{ runner.os }}-${{ runner.arch }}"
@@ -91,18 +117,27 @@ runs:
       run: |
         mkdir -p "${{ runner.temp }}/covdir-action"
         cd "${{ runner.temp }}/covdir-action"
-        curl -sL "https://github.com/ecliptical/covdir-report-action/releases/download/v${{ inputs.version }}/covdir-report-action-${{ steps.platform.outputs.target }}.tar.gz" \
-          | tar xzf -
-        chmod +x covdir-report-action
+        ARCHIVE="covdir-report-action-${{ steps.platform.outputs.target }}.${{ steps.platform.outputs.archive_ext }}"
+        curl -sLo "$ARCHIVE" "https://github.com/ecliptical/covdir-report-action/releases/download/v${{ inputs.version }}/$ARCHIVE"
+        # bsdtar (the default `tar` on Windows runners) handles zip transparently
+        tar xf "$ARCHIVE"
+        rm -f "$ARCHIVE"
+        if [ "${{ runner.os }}" != "Windows" ]; then
+          chmod +x covdir-report-action
+        fi
 
     - name: Download and install grcov
       if: inputs.skip_grcov != 'true'
       shell: bash
       run: |
         cd "${{ runner.temp }}/covdir-action"
-        curl -sL "https://github.com/mozilla/grcov/releases/download/v${{ inputs.grcov_version }}/grcov-${{ steps.platform.outputs.grcov_target }}.tar.bz2" \
-          | tar xjf -
-        chmod +x grcov
+        ARCHIVE="grcov-${{ steps.platform.outputs.grcov_target }}.${{ steps.platform.outputs.grcov_archive_ext }}"
+        curl -sLo "$ARCHIVE" "https://github.com/mozilla/grcov/releases/download/v${{ inputs.grcov_version }}/$ARCHIVE"
+        tar xf "$ARCHIVE"
+        rm -f "$ARCHIVE"
+        if [ "${{ runner.os }}" != "Windows" ]; then
+          chmod +x grcov
+        fi
 
     - name: Set up llvm-tools path
       if: inputs.skip_grcov != 'true'
@@ -110,7 +145,7 @@ runs:
       shell: bash
       run: |
         # Find llvm-tools from rustup
-        LLVM_PROFDATA=$(rustc --print sysroot)/lib/rustlib/${{ steps.platform.outputs.target }}/bin/llvm-profdata
+        LLVM_PROFDATA="$(rustc --print sysroot)/lib/rustlib/${{ steps.platform.outputs.target }}/bin/llvm-profdata${{ steps.platform.outputs.exe_suffix }}"
         if [ -f "$LLVM_PROFDATA" ]; then
           echo "path=$(dirname "$LLVM_PROFDATA")" >> $GITHUB_OUTPUT
         else
@@ -125,7 +160,7 @@ runs:
         LLVM_PATH: ${{ steps.llvm.outputs.path }}
         GRCOV_PATH: ${{ runner.temp }}/covdir-action
       run: |
-        "${{ runner.temp }}/covdir-action/covdir-report-action" \
+        "${{ runner.temp }}/covdir-action/covdir-report-action${{ steps.platform.outputs.exe_suffix }}" \
           "--file=${{ inputs.file }}" \
           "--summary=${{ inputs.summary }}" \
           "--title=${{ inputs.title }}" \
