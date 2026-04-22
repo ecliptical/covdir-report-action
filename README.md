@@ -31,7 +31,7 @@ jobs:
           RUSTFLAGS: '-Cinstrument-coverage'
           LLVM_PROFILE_FILE: 'target/coverage/%p-%m.profraw'
       - name: Generate coverage report
-        uses: ecliptical/covdir-report-action@v0.3
+        uses: ecliptical/covdir-report-action@v0.4
         with:
           summary: 'true'
 ```
@@ -41,7 +41,7 @@ jobs:
 If you prefer to run grcov yourself (for more control over its options), you can disable the built-in grcov integration and pass a pre-generated covdir.json file:
 
 ```yaml
-- uses: ecliptical/covdir-report-action@v0.3
+- uses: ecliptical/covdir-report-action@v0.4
   with:
     skip_grcov: 'true'
     file: ./target/covdir.json
@@ -73,7 +73,7 @@ These inputs control the bundled grcov, which is enabled by default.
 | excl_start | Exclude start pattern (`--excl-start` flag) | no | `^mod\s+tests?\s*\{$` |
 | branch | Include branch coverage (`--branch` flag) | no | `true` |
 | grcov_args | Additional arguments to pass to grcov | no | |
-| version | Version of the action binaries to use | no | `0.3.0` |
+| version | Version of the action binaries to use | no | `0.4.0` |
 | grcov_version | Version of grcov to use | no | `0.10.5` |
 
 ## Outputs
@@ -114,7 +114,7 @@ jobs:
           RUSTFLAGS: '-Cinstrument-coverage'
           LLVM_PROFILE_FILE: 'target/coverage/%p-%m.profraw'
       - name: Generate coverage report
-        uses: ecliptical/covdir-report-action@v0.3
+        uses: ecliptical/covdir-report-action@v0.4
         with:
           summary: 'true'
           out: ./target/coverage.md
