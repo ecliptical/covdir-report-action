@@ -38,8 +38,8 @@ inputs:
   grcov_args:
     description: 'Additional arguments to pass to grcov'
   version:
-    description: 'Version of the action binaries to use'
-    default: '0.3.0'
+    description: 'Version of the action binaries to use. Defaults to the version derived from the action ref (e.g. `v0.4.1`), falling back to the bundled default.'
+    default: ''
   grcov_version:
     description: 'Version of grcov to use'
     default: '0.10.5'
@@ -112,13 +112,30 @@ runs:
             ;;
         esac
 
+    - name: Resolve action version
+      id: version
+      shell: bash
+      env:
+        INPUT_VERSION: ${{ inputs.version }}
+        ACTION_REF: ${{ github.action_ref }}
+        FALLBACK_VERSION: '0.4.1'
+      run: |
+        if [ -n "$INPUT_VERSION" ]; then
+          resolved="$INPUT_VERSION"
+        elif [[ "$ACTION_REF" =~ ^v?([0-9]+\.[0-9]+\.[0-9]+.*)$ ]]; then
+          resolved="${BASH_REMATCH[1]}"
+        else
+          resolved="$FALLBACK_VERSION"
+        fi
+        echo "version=$resolved" >> "$GITHUB_OUTPUT"
+
     - name: Download and install covdir-report-action
       shell: bash
       run: |
         mkdir -p "${{ runner.temp }}/covdir-action"
         cd "${{ runner.temp }}/covdir-action"
         ARCHIVE="covdir-report-action-${{ steps.platform.outputs.target }}.${{ steps.platform.outputs.archive_ext }}"
-        curl -sLo "$ARCHIVE" "https://github.com/ecliptical/covdir-report-action/releases/download/v${{ inputs.version }}/$ARCHIVE"
+        curl -fsSLo "$ARCHIVE" "https://github.com/ecliptical/covdir-report-action/releases/download/v${{ steps.version.outputs.version }}/$ARCHIVE"
         # bsdtar (the default `tar` on Windows runners) handles zip transparently
         tar xf "$ARCHIVE"
         rm -f "$ARCHIVE"
@@ -132,7 +149,7 @@ runs:
       run: |
         cd "${{ runner.temp }}/covdir-action"
         ARCHIVE="grcov-${{ steps.platform.outputs.grcov_target }}.${{ steps.platform.outputs.grcov_archive_ext }}"
-        curl -sLo "$ARCHIVE" "https://github.com/mozilla/grcov/releases/download/v${{ inputs.grcov_version }}/$ARCHIVE"
+        curl -fsSLo "$ARCHIVE" "https://github.com/mozilla/grcov/releases/download/v${{ inputs.grcov_version }}/$ARCHIVE"
         tar xf "$ARCHIVE"
         rm -f "$ARCHIVE"
         if [ "${{ runner.os }}" != "Windows" ]; then
