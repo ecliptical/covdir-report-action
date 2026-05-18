@@ -25,9 +25,9 @@ checksum = "7f202df86484c868dbad7eaa557ef785d5c66295e41b460ef922eca0723b842c"
 
 [[package]]
 name = "assert_cmd"
-version = "2.2.1"
+version = "2.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "39bae1d3fa576f7c6519514180a72559268dd7d1fe104070956cb687bc6673bd"
+checksum = "2aa3a22042e45de04255c7bf3626e239f450200fd0493c1e382263544b20aea6"
 dependencies = [
  "anstyle",
  "bstr",
@@ -203,9 +203,9 @@ dependencies = [
 
 [[package]]
 name = "gha"
-version = "0.1.7"
+version = "0.1.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "82d6ed51b0f05a389e22a3af0cd5e99aea91b76ace4997696bc584fc7fac8717"
+checksum = "e7abbe06c19661d9232099aeba59c32dac5af387650940252efd7947afd3d0ac"
 
 [[package]]
 name = "globset"
