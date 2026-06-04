@@ -46,6 +46,14 @@ jobs:
   coverage:
     name: Run tests with coverage
     runs-on: ubuntu-latest
+    env:
+      RUSTFLAGS: '-Cinstrument-coverage'
+      # Use an absolute path so that instrumented subprocesses spawned with a
+      # changed working directory (e.g. via assert_cmd) still write their
+      # .profraw files to the same directory that grcov scans. A relative path
+      # scatters subprocess coverage data into temp/fixture dirs and grcov
+      # silently reports 0% for the project's own source.
+      LLVM_PROFILE_FILE: '${{ github.workspace }}/target/coverage/%p-%m.profraw'
     steps:
       - name: Check out the source code
         uses: actions/checkout@v6
@@ -64,9 +72,6 @@ jobs:
           components: rustfmt, clippy, llvm-tools
       - name: Run unit tests
         run: cargo test
-        env:
-          RUSTFLAGS: '-Cinstrument-coverage'
-          LLVM_PROFILE_FILE: 'target/coverage/%p-%m.profraw'
       - name: Generate coverage report
         uses: ./
         with:
