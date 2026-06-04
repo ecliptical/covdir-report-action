@@ -20,6 +20,9 @@ name: Rust Coverage
 jobs:
   coverage:
     runs-on: ubuntu-latest
+    env:
+      RUSTFLAGS: '-Cinstrument-coverage'
+      LLVM_PROFILE_FILE: '${{ github.workspace }}/target/coverage/%p-%m.profraw'
     steps:
       - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
@@ -27,14 +30,18 @@ jobs:
           components: llvm-tools
       - name: Test
         run: cargo test
-        env:
-          RUSTFLAGS: '-Cinstrument-coverage'
-          LLVM_PROFILE_FILE: 'target/coverage/%p-%m.profraw'
       - name: Generate coverage report
         uses: ecliptical/covdir-report-action@v0.4
         with:
           summary: 'true'
 ```
+
+> **Note:** `LLVM_PROFILE_FILE` must be an **absolute path** (using `${{ github.workspace }}`).
+> If your tests spawn the project binary as a subprocess with a changed working directory
+> (e.g. via [`assert_cmd`](https://docs.rs/assert_cmd)), a relative path causes each
+> subprocess to write its `.profraw` files into the subprocess's cwd instead of the
+> repo root. grcov only scans the configured `coverage_path`, so those files are never
+> found and coverage is silently reported as 0%.
 
 ## Usage with Pre-generated covdir.json
 
@@ -101,6 +108,9 @@ name: Rust Coverage
 jobs:
   coverage:
     runs-on: ubuntu-latest
+    env:
+      RUSTFLAGS: '-Cinstrument-coverage'
+      LLVM_PROFILE_FILE: '${{ github.workspace }}/target/coverage/%p-%m.profraw'
     steps:
       - name: Check out the source code
         uses: actions/checkout@v6
@@ -110,9 +120,6 @@ jobs:
           components: llvm-tools
       - name: Run unit tests
         run: cargo test
-        env:
-          RUSTFLAGS: '-Cinstrument-coverage'
-          LLVM_PROFILE_FILE: 'target/coverage/%p-%m.profraw'
       - name: Generate coverage report
         uses: ecliptical/covdir-report-action@v0.4
         with:
